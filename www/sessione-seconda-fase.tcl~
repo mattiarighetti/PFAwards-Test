@@ -1,0 +1,70 @@
+ad_page_contract {
+    @author Mattia Righetti (mattia.righetti@professionefinanza.com)
+    @creation-date Monday 3 November, 2014
+} {
+    esame_id:naturalnum,optional
+    {rispusr_id "0"}
+}
+set page_title "Sessione - PFAwards"
+# Controlla utenza
+if {![ad_conn user_id]} {
+    ad_return_complaint 1 "<b>Utente non autorizzato</b><br>Non hai le credenziali adatte per svolgere il test selezionato. Se sei in modalità di navigazione <i>privata</i>, ti invitiamo ad uscire, ad effettuare nuovamnte il login per consentirci di salvare i cookies."
+}
+# Controlla ID esame e cookies
+if {![info exists esame_id]} {
+    set esame_id [ad_get_cookie esame_id]
+    if {$esame_id eq ""} {
+	ad_script_abort
+    }
+}
+# Controllo su fine esame (se esame già finito...)
+if {[db_0or1row query "select * from awards_esami_2 where esame_id = :esame_id and end_time is not null"]} {
+    ad_return_complaint 1 "La prova di esame al quale si sta tentando di accedere è già stata consegnata."
+}
+# Prepara descrizione categoria esame
+set categoria [db_string categoria ""]
+set current_timestamp [db_string current_timestamp ""]
+# Se è la prima domanda prende la prima e controlla lo start_time
+if {$rispusr_id == "0"} {
+    set rispusr_id [db_string query "select rispusr_id from awards_rispusr_2 where esame_id = :esame_id and risposta is null order by rispusr_id limit 1"]
+    if {![db_0or1row query "select start_time from awards_esami_2 where start_time is not null and esame_id = :esame_id"]} {
+	db_dml start_time ""
+    }
+}
+# Prepara il corpo della domanda
+set domanda_id [db_string domanda_id ""]
+set domanda [db_string domanda ""]
+set mode "edit"
+set buttons [list [list "Conferma risposta" edit]]
+# Se risposta già data, prepara ad_form in edit, se no in new
+ad_form -name risposta \
+    -mode $mode \
+    -edit_buttons $buttons \
+    -has_edit 1 \
+    -select_query_name load_risposta \
+    -export {esame_id} \
+    -form {
+	rispusr_id:key
+	{testo_risposta:text(textarea)
+            {label "Risposta"}
+	    {html {rows 10 cols 100 wrap soft autofocus "" style "font-size:18px;"}}
+        }
+    } -edit_data {
+	db_transaction {
+	    db_dml insert_answer ""
+	}
+    } -on_submit {
+        set ctr_errori 0
+        if {$ctr_errori > 0} {
+            break
+        }
+    } -after_submit {
+	# Se domanda è ultima, aggiorna solo sulla stessa pagina se no procede alla successiva
+	if {![db_0or1row query "select * from awards_rispusr_2 where esame_id = :esame_id and risposta is null limit 1"]} {
+	    ad_returnredirect -allow_complete_url "consegna-seconda-fase"
+        } else {
+	    set rispusr_id [db_string query "select rispusr_id from awards_rispusr_2 where esame_id = :esame_id and risposta is null limit 1"]
+	    ad_returnredirect -allow_complete_url "sessione-seconda-fase?esame_id=$esame_id&rispusr_id=$rispusr_id"
+	}
+	ad_script_abort
+    }

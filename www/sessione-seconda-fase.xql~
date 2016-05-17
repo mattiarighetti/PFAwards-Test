@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<queryset>
+  <fullquery name="categoria">
+    <querytext>
+      SELECT c.titolo FROM awards_categorie c, awards_esami_2 e WHERE e.categoria_id = c.categoria_id AND e.esame_id = :esame_id
+    </querytext>
+  </fullquery>
+  <fullquery name="current_timestamp">
+    <querytext>
+      SELECT CURRENT_TIMESTAMP
+    </querytext>
+  </fullquery>
+  <fullquery name="start_time">
+    <querytext>
+      UPDATE awards_esami_2 SET start_time = :current_timestamp WHERE esame_id = :esame_id
+    </querytext>
+    </fullquery>
+  <fullquery name="domanda_id">
+    <querytext>
+      SELECT domanda_id FROM awards_rispusr_2 WHERE rispusr_id = :rispusr_id
+    </querytext>
+  </fullquery>
+    <fullquery name="domanda">
+    <querytext>
+      SELECT testo FROM awards_domande_2 WHERE domanda_id = :domanda_id
+    </querytext>
+  </fullquery>
+  <fullquery name="insert_answer">
+    <querytext>
+      update awards_rispusr_2 set risposta = :testo_risposta WHERE rispusr_id = :rispusr_id	
+    </querytext>   
+    </fullquery>
+  <fullquery name="consegna">
+    <querytext>
+      update awards_esami_2 set end_time = current_timestamp where esame_id = :esame_id
+    </querytext>
+  </fullquery>
+</queryset>
