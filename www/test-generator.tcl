@@ -11,6 +11,8 @@ ad_page_contract {
 if {![info exists persona_id]} { 
     set persona_id [db_string query "select persona_id from crm_persone where user_id = [ad_conn user_id]"]
 }
+# Imposta ID Award
+set award_id [pf::awards::id]
 # Imposta ID Esame
 if {![info exists esame_id]} {
     set esame_id [db_string query "select coalesce(max(esame_id)+1,1) from awards_esami"]
@@ -23,12 +25,12 @@ if {$categoria_id eq ""} {
 }
 ns_log notice Exam Generation. Exam ID: $esame_id Person ID: $persona_id Subject: $categoria_id
 # Ciclo di inserimento 5 domande da 10 punti
-db_foreach query "select d.domanda_id from awards_domande d where d.categoria_id = :categoria_id and exists (select * from awards_risposte r where r.domanda_id = d.domanda_id and r.punti = 10) order by random() limit 5" {
+db_foreach query "select d.domanda_id from awards_domande d where d.categoria_id = :categoria_id and award_id = :award_id and exists (select * from awards_risposte r where r.domanda_id = d.domanda_id and r.punti = 10) order by random() limit 5" {
     set rispusr_id [db_string query "select coalesce(max(rispusr_id)+1,1) from awards_rispusr"]
     db_dml query "insert into awards_rispusr (rispusr_id, domanda_id, esame_id, item_order) values (:rispusr_id, :domanda_id, :esame_id, trunc(random()*99+1))"
 }
 # Ciclo di inserimento 10 domande da 5 punti
-db_foreach query "select d.domanda_id from awards_domande d where d.categoria_id = :categoria_id and exists (select * from awards_risposte r where r.domanda_id = d.domanda_id and r.punti = 5) order by random() limit 10" {
+db_foreach query "select d.domanda_id from awards_domande d where d.categoria_id = :categoria_id and award_id = :award_id and exists (select * from awards_risposte r where r.domanda_id = d.domanda_id and r.punti = 5) order by random() limit 10" {
     set rispusr_id [db_string query "select coalesce(max(rispusr_id)+1,1) from awards_rispusr"]
     db_dml query "insert into awards_rispusr (rispusr_id, domanda_id, esame_id, item_order) values (:rispusr_id, :domanda_id, :esame_id, trunc(random()*99+1))"
 }

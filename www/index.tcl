@@ -5,32 +5,32 @@ ad_page_contract {
     esame_id:naturalnum
     redo:optional
 }
-set page_title "PFAwards - Piattaforma Esami Online"
+set page_title "PFAwards - Test Online"
 # Controllo su utenza
 if {![ad_conn user_id]} {
     ad_return_complaint 1 "<strong>Utente non autorizzato</strong><br>Non hai le credenziali adatte per svolgere il test selezionato."
 } else {
     set persona_id [db_string query "select persona_id from crm_persone where user_id = [ad_conn user_id]"]
 }
+set award_id [pf::awards::id]
 #Capisce se esame è prima o seconda fase
-if {[db_0or1row query "select * from awards_esami where esame_id = :esame_id"]} {
+if {[db_0or1row query "select * from awards_esami where esame_id = :esame_id and award_id = :award_id"]} {
     # Se esame precedentemente rifiutato, rigenera per una volta
      if {[info exists redo]} {
-	set categoria_id [db_string query "select categoria_id from awards_esami where esame_id = :esame_id"]    
-	if {![db_0or1row query "select * from awards_esami where categoria_id = :categoria_id and persona_id = :persona_id and stato = 'rifiutato'"]} {
-	    db_dml query "update awards_esami set stato = 'rifiutato' where esame_id = :esame_id"
-	    # Controlla precedenti bonus
-	    if {[db_0or1row query "select * from awards_bonus where esame_id = :esame_id limit 1"]} {
-		set bonus_id [db_string query  "select bonus_id from awards_bonus where esame_id = :esame_id limit 1"]
-	    } else {
-		set bonus_id ""
-	    }
-	    set esame_id [db_string query "select coalesce(max(esame_id)+trunc(random()*99+1), 1) from awards_esami"]
-	    db_dml query "insert into awards_esami (esame_id, persona_id, categoria_id, attivato) values (:esame_id, :persona_id, :categoria_id, true)"
+	 db_1row query "select categoria_id, scadenza from awards_esami where esame_id = :esame_id"
+	 if {![db_0or1row query "select * from awards_esami where award_id = :award_id and categoria_id = :categoria_id and persona_id = :persona_id and stato = 'rifiutato'"]} {
+	     db_dml query "update awards_esami set stato = 'rifiutato' where esame_id = :esame_id"
+	     # Controlla precedenti bonus
+	     if {[db_0or1row query "select * from awards_bonus where esame_id = :esame_id limit 1"]} {
+		 set bonus_id [db_string query  "select bonus_id from awards_bonus where esame_id = :esame_id limit 1"]
+	     } else {
+		 set bonus_id ""
+	     }
+	     set esame_id [db_string query "select coalesce(max(esame_id)+trunc(random()*99+1), 1) from awards_esami"]
+	     db_dml query "insert into awards_esami (esame_id, persona_id, categoria_id, attivato, award_id, data_iscr, decorrenza, scadenza) values (:esame_id, :persona_id, :categoria_id, true, :award_id, current_date, current_date, :scadenza)"
 	    if {$bonus_id ne ""} {
 		db_dml query "update awards_bonus set esame_id = :esame_id where bonus_id = :bonus_id"
 	    }
-	    ns_log notice Exam Refused: New Exam ID: $esame_id Person ID: $persona_id Subject ID: $categoria_id
 	} else {
 	    ad_return_complaint 1 "Risulta che hai già rifiutato l'esame una volta. Ti ricordiamo che non è possibile rifarlo più di una volta."
 	}
@@ -59,7 +59,7 @@ if {[db_0or1row query "select * from awards_esami where esame_id = :esame_id"]} 
 	set bonus_html ""
     }
      set start_button "<a href=\"sessione\" class=\"btn btn-lg btn-primary\"><span class=\"glyphicon glyphicon-play-circle\"></span> Inizia l'esame</a>"
-     set advice_html "<div class=\"well\">La valutazione delle tue competenze in <b>$categoria</b> sta per cominciare.<br>Avrai a disposizione 15 minuti per svolgere il test di <b>15 domande</b>, alcune classificate come facili (la singola risposta giusta ti darà 5 crediti mentre ogni sbagliata toglierà 2 crediti) altre come difficili (10 punti per la giusta e -4 per le sbagliate).<br>Nel caso in cui non fossi soddisfatto del tuo risultato <b>potrai ripetere il test UNA sola volta</b>.<br><b>Passeranno alla seconda fase di valutazine i migliori 30 risultati</b> e comunque tutti coloro che otterranno più di 75 crediti.<br>In bocca al lupo!</div></br>"   
+     set advice_html "<div class=\"well\">La valutazione delle tue competenze in <b>$categoria</b> sta per cominciare.<br>Avrai a disposizione 15 minuti per svolgere il test di 15 domande, alcune classificate come facili (la singola risposta giusta ti darà 5 crediti mentre ogni sbagliata toglierà 2 crediti) altre come difficili (10 punti per la giusta e -4 per le sbagliate). Nel caso in cui non fossi soddisfatto del tuo risultato potrai ripetere IMMEDIATAMENTE il test UNA sola volta ATTENZIONE: una volta uscito dalla sessione non potrai ripetere il test.<br/>Il PDF con le risposte corrette sarà disponibile al termine della prima fase,dopo il 23 ottobre. Passeranno alla seconda fase di valutazione i migliori 30 partecipanti e comunque tutti coloro che otterranno più di 75 crediti. In bocca al lupo!</div></br>"   
  }
 # Se esame seconda fase
 if {[db_0or1row query "select * from awards_esami_2 where esame_id = :esame_id"]} {
@@ -69,8 +69,7 @@ if {[db_0or1row query "select * from awards_esami_2 where esame_id = :esame_id"]
         with_catch errmsg {
             #Controlla se l'esame è stato generato. Se no lo genera.
 	    if {![db_0or1row query "select * from awards_rispusr_2 where esame_id = :esame_id limit 1"]} {
-                ns_log notice ExamID $esame_id not generated. Is about to be though.
-                # Genera esame
+		# Genera esame
 		set categoria_id [db_string query "select categoria_id from awards_esami_2 e2 where e2.esame_id = :esame_id"]
 		db_foreach query "select domanda_id from awards_domande_2 where categoria_id = :categoria_id order by item_order" {
 		    set rispusr_id [db_string query "select coalesce( max(rispusr_id) + trunc(random()*99+1), trunc( random()*99+1)) from awards_rispusr_2"]

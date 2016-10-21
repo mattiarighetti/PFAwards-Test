@@ -12,7 +12,7 @@ if {$scaduto eq 1} {
 }
 set fine_imp [db_string query "select end_time from itfaw_esami where esame_id = :esame_id"]
 if {$fine_imp eq ""} {
-    db_dml query "update itfaw_esami set end_time = current_timestamp where esame_id = :esame_id"
+    db_dml query "update itfaw_esami set end_time = current_timestamp, stato = 'svolto' where esame_id = :esame_id"
 }
 set tempo [db_string query "select to_char(end_time - start_time, 'MI:SS') from itfaw_esami where esame_id = :esame_id"]
 set punteggio 0

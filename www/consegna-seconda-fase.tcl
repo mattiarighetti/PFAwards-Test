@@ -25,10 +25,10 @@ append html "<tr><td colspan=\"1\" width=\"80%\"><center><font size=\"4em\" face
 set counter 1
 db_foreach query "SELECT rispusr_id FROM awards_rispusr_2 WHERE esame_id = :esame_id ORDER BY rispusr_id" {
     # Estrae corpo della domanda
-    set domanda [db_string query "SELECT d.testo FROM awards_domande_2 d, awards_rispusr_2 r WHERE d.domanda_id = r.domanda_id AND r.rispusr_id = :rispusr_id"]
+    set domanda [string map {à &agrave; À &Agrave; è &egrave; é &eacute; È &Egrave; É &Eacute; ò &ograve;} [db_string query "SELECT d.testo FROM awards_domande_2 d, awards_rispusr_2 r WHERE d.domanda_id = r.domanda_id AND r.rispusr_id = :rispusr_id"]]
     append html "<tr><td bordercolor=\"#333333\"><center><big>$counter</big></center></td><td colspan=\"2\"><font face=\"Times New Roman\" size=\"1em\">$domanda</font></td></tr>"
     # Estrae risposta data
-    set risposta [db_string query "SELECT risposta FROM awards_rispusr_2 WHERE rispusr_id = :rispusr_id"]
+    set risposta [string map {à &agrave; À &Agrave; è &egrave; é &eacute; È &Egrave; É &Eacute; ò &ograve;} [db_string query "SELECT risposta FROM awards_rispusr_2 WHERE rispusr_id = :rispusr_id"]]
     append html "<tr><td>&nbsp;</td><td colspan=\"2\"><font face=\"Times New Roman\" size=\"2em\">$risposta</font></td></tr>"
     incr counter
 }
