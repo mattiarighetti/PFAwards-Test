@@ -71,7 +71,7 @@ if {[db_0or1row query "select * from awards_esami_2 where esame_id = :esame_id"]
 	    if {![db_0or1row query "select * from awards_rispusr_2 where esame_id = :esame_id limit 1"]} {
 		# Genera esame
 		set categoria_id [db_string query "select categoria_id from awards_esami_2 e2 where e2.esame_id = :esame_id"]
-		db_foreach query "select domanda_id from awards_domande_2 where categoria_id = :categoria_id order by item_order" {
+		db_foreach query "select domanda_id from awards_domande_2 where categoria_id = :categoria_id and award_id = :award_id order by item_order" {
 		    set rispusr_id [db_string query "select coalesce( max(rispusr_id) + trunc(random()*99+1), trunc( random()*99+1)) from awards_rispusr_2"]
 		    db_dml query "insert into awards_rispusr_2 (rispusr_id, domanda_id, esame_id) values (:rispusr_id, :domanda_id, :esame_id)"
 		}

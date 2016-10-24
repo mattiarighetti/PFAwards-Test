@@ -3,10 +3,9 @@
   
   <div class="container">
     <br>
-    <center>
-      <img class="center-block" style="display:inline-block;" height="100px" width="auto" src="http://images.professionefinanza.com/pfawards/logos/awards-2016.png">
-	    </center>
-	  </br>
+      <center>
+	<img class="center-block" style="display:inline-block;" height="150px" width="auto" src="http://images.professionefinanza.com/logos/pfawards.png">
+      </center>
 	  <div class="panel panel-default">
 	    <div class="panel-body">
 	      <p align="center">Stai svolgendo il questionario di @categoria;noquote@.</p>

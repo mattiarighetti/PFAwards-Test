@@ -52,7 +52,7 @@ ad_form -name risposta \
 	rispusr_id:key
 	{testo_risposta:text(textarea)
             {label "Risposta"}
-	    {html {rows 10 cols 100 wrap soft autofocus "" style "font-size:18px;"}}
+	    {html {rows 10 cols 70 wrap soft autofocus "" style "font-size:18px;"}}
         }
     } -edit_data {
 	db_transaction {
