@@ -84,6 +84,7 @@ if {[db_0or1row query "select * from awards_esami_2 where esame_id = :esame_id"]
     set categoria [db_string query "select c.titolo from awards_categorie c, awards_esami_2 e where e.esame_id = :esame_id and e.categoria_id = c.categoria_id" ]
     set bonus_html ""
     set start_button "<a href=\"sessione-seconda-fase\" class=\"btn btn-lg btn-primary\"><span class=\"glyphicon glyphicon-play-circle\"></span> Vai al questionario</a>"
-    set advice_html "<div class=\"well\">Il questionario di <b>$categoria</b> sta per cominciare.<br>Il questionario consta di <b>2 domande</b>. Una volta confermata la prima , potrai rispondere alla seconda senza più modificare la precedente.</div>"
+    set advice_html "<div class=\"well\">Il questionario di <b>$categoria</b> sta per cominciare.<br>Il questionario consta di <b>2 domande</b>. Potrai leggere la prima domanda e decidere di rispondere in un secondo momento; ti ricordo che, una volta confermata la risposta, non potrai più modificarla.
+Al secondo quesito invece, dovrai rispondere immediatamente, dato il limite temporale di 45 minuti, senza avere la possibilità di uscire dal portale per poi rientrarvi. In bocca al lupo!"
 }
 ad_return_template

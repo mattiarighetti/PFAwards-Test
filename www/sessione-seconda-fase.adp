@@ -1,5 +1,18 @@
 <master>
   <property name="page_title">Sessione - PF</property>
+
+  <if @target_date@ ne 0>
+      <script language="JavaScript">
+      TargetDate = "@target_date;noquote@";
+      BackColor = "white";
+      ForeColor = "black";
+      CountActive = true;
+      CountStepper = -1;
+      LeadingZero = true;
+      DisplayFormat = "%%M%% minuti e %%S%% secondi";
+      FinishMessage = "Tempo finito!";
+    </script>
+  </if>
   
   <div class="container">
     <br>
@@ -9,7 +22,10 @@
 	  <div class="panel panel-default">
 	    <div class="panel-body">
 	      <p align="center">Stai svolgendo il questionario di @categoria;noquote@.</p>
-		</div>
+	      <if @target_date@ ne 0>
+		<center><p>Tempo rimasto a disposizione: <big><script language="JavaScript" src="http://scripts.hashemian.com/js/countdown.js"></script></big>.</p></center>
+		  </if>
+		  </div>
 		</div>
 	  <table class="table">
             <tr>

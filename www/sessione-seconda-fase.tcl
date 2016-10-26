@@ -4,6 +4,7 @@ ad_page_contract {
 } {
     esame_id:naturalnum,optional
     {rispusr_id "0"}
+    {target_date 0}
 }
 set page_title "Sessione - PFAwards"
 # Controlla utenza
@@ -35,15 +36,29 @@ if {$rispusr_id == "0"} {
 	ad_returnredirect -message "Tutte le risposte sono già state registrate." consegna-seconda-fase
 	ad_script_abort
     }
+} else {
+    if {[db_string query "select rispusr_id from awards_rispusr_2 where esame_id = :esame_id order by rispusr_id limit 1 offset 1"] eq $rispusr_id} {
+	#controllo tempo
+	if {![db_0or1row query "select start_time_2 from awards_esami_2 where esame_id = :esame_id and start_time_2 is not null"]} {
+	    db_dml query "update awards_esami_2 set start_time_2 = current_timestamp where esame_id = :esame_id"
+	}
+	if {[db_0or1row query "select * from awards_esami_2 where esame_id = :esame_id and start_time_2 < current_timestamp + (45*interval '1 minute')"]} {
+	set target_date [db_string query "select to_char(start_time_2 + (45 * interval '1 minute'), 'MM/DD/YYYY HH12:MI:SS AM') from awards_esami_2 where esame_id = :esame_id"]
+	set current_timestamp [db_string query "select current_timestamp"]
+	} else {
+	    ad_returnredirect -message "Tutte le risposte sono già state registrate." consegna-seconda-fase
+	    ad_script_abort
+	}
+    }
 }
+
 # Prepara il corpo della domanda
 set domanda_id [db_string domanda_id ""]
 set domanda [db_string domanda ""]
-set mode "edit"
 set buttons [list [list "Conferma risposta" edit]]
 # Se risposta già data, prepara ad_form in edit, se no in new
 ad_form -name risposta \
-    -mode $mode \
+    -mode edit \
     -edit_buttons $buttons \
     -has_edit 1 \
     -select_query_name load_risposta \
